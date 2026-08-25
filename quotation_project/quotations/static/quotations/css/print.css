@@ -1,0 +1,625 @@
+/* =====================================================
+   PRINT.CSS - Optimized Print & Full-Bleed A4 Invoice & Quotation
+===================================================== */
+
+/* Reset for all elements */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Common Typography & Base Styles */
+html, body, .app-wrapper, .main-wrapper, #printTemplate, #invoicePrintTemplate, .pdf-container {
+    font-family: 'Times New Roman', Times, serif;
+    color: #0f172a;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+}
+
+/* =====================================================
+   SCREEN ONLY STYLES
+===================================================== */
+@media screen {
+    #formSection {
+        display: block;
+        padding: 20px;
+    }
+
+    #printTemplate,
+    #invoicePrintTemplate {
+        display: none;
+        padding: 0;
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+    }
+
+    .pdf-container {
+        width: 210mm;
+        min-height: 297mm;
+        margin: 0 auto;
+        padding: 10mm;
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    }
+}
+
+/* =====================================================
+   PRINT ONLY STYLES
+===================================================== */
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 4mm 6mm;
+        padding-left: 5mm;
+        padding-right: 5mm;
+    }
+
+    html, body {
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow: hidden !important;
+        background-color: #ffffff !important;
+        background: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #formSection,
+    #invoicePreviewSection,
+    .sidebar,
+    .no-print {
+        display: none !important;
+    }
+
+    #printTemplate,
+    #invoicePrintTemplate,
+    #createQuotationPrintTemplate {
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background-color: #ffffff !important;
+        background: #ffffff !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+        page-break-before: avoid !important;
+        break-before: avoid !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .app-wrapper,
+    .main-wrapper {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background-color: #ffffff !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+    }
+
+    .pdf-container {
+        width: 100% !important;
+        min-height: 260mm !important;
+        max-height: 280mm !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background-color: #ffffff !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* 1. Create Quotation Page Print Spacing */
+    #createQuotationPrintTemplate .pdf-header {
+        margin-top: 15px !important;
+        padding-top: 0px !important;
+    }
+
+    /* 2. Quotation Detail / Preview Page Print Spacing */
+    #printTemplate .pdf-header {
+        margin-top: -30px !important;
+        padding-top: 0px !important;
+    }
+
+    /* 3. Invoice Detail / Preview Page Print Spacing */
+    #invoicePrintTemplate .pdf-header {
+        margin-top: 10px !important;
+        padding-top: 10px !important;
+    }
+
+    /* Force background colors and borders to print properly */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Break rules to prevent weird page splits */
+    .details-section,
+    .terms-section,
+    .bank-signature,
+    .pdf-bottom-wrapper {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .pdf-bottom-wrapper {
+        margin-top: auto !important;
+        width: 100% !important;
+    }
+
+    .service-table {
+        page-break-inside: auto !important;
+    }
+
+    .service-table tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* Remove unwanted blank gap between header and first data row */
+    .service-table tbody::before {
+        content: none !important;
+        display: none !important;
+        height: 0 !important;
+    }
+}
+
+/* =====================================================
+   SHARED LAYOUT STYLES
+===================================================== */
+
+/* HEADER */
+.pdf-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+    padding-bottom: 0;
+    border-bottom: none;
+    width: 100%;
+    background: #ffffff !important;
+}
+
+.left-header {
+    width: 55% !important;
+}
+
+.left-header h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.left-header p {
+    font-size: 11px;
+    color: #000000;
+    margin: 1px 0;
+    line-height: 1.3;
+}
+
+.left-header p a, 
+.left-header p span {
+    text-decoration: underline;
+}
+
+.right-header {
+    width: 45% !important;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.company-logo {
+    max-height: 48px;
+    width: auto;
+    object-fit: contain;
+    margin-bottom: 4px;
+}
+
+.right-header h4,
+#pdfDocumentType {
+    color: #000000 !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    margin: 0 !important;
+    line-height: 1.1 !important;
+    text-align: right !important;
+    font-family: 'Times New Roman', Times, serif !important;
+    letter-spacing: 0.5px !important;
+    white-space: nowrap !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+/* BILL TO & QUOTE DETAILS */
+.bill-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+    gap: 15px;
+    width: 100%;
+    background: #ffffff !important;
+}
+
+.bill-section > div:first-child {
+    width: 50%;
+}
+
+.bill-section h4 {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 4px 0;
+}
+
+.bill-section h4:first-child {
+    color: #000000 !important;
+}
+
+.bill-section h4#pdfProjectName {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    text-transform: none;
+    letter-spacing: normal;
+    margin-bottom: 2px;
+}
+
+.bill-section p#pdfLocation {
+    font-size: 11px;
+    color: #000000;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.quote-details {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.quote-details p {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    margin: 2px 0;
+    font-size: 11px;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+.quote-details p b {
+    color: #000000 !important;
+    font-weight: 600;
+    white-space: nowrap;
+    margin-right: 6px;
+}
+
+.quote-details p span {
+    color: #0f172a;
+    font-weight: 700;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* DETAILS BOX */
+.details-section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    gap: 12px;
+    width: 100%;
+    background: #ffffff !important;
+}
+
+.details-box {
+    width: 49%;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff !important;
+}
+
+.details-box h4 {
+    background: #000000 !important;
+    color: #ffffff !important;
+    margin: 0;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.details-box table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    background: #ffffff !important;
+}
+
+.details-box td {
+    padding: 3px 8px;
+    font-size: 11px;
+    line-height: 1.25;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: top;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    background: #ffffff !important;
+}
+
+.details-box tr:last-child td {
+    border-bottom: none;
+}
+
+.details-box td:first-child {
+    width: 35%;
+    font-weight: bold;
+    color: #000000;
+}
+
+.details-box td:last-child {
+    width: 65%;
+    color: #0f172a;
+}
+
+/* SERVICE TABLE */
+.service-section {
+    margin-top: 15px;
+    margin-bottom: 6px;
+    width: 100%;
+    background: #ffffff !important;
+}
+
+.service-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0;
+    table-layout: fixed;
+    background: #ffffff !important;
+}
+
+.service-table thead {
+    display: table-header-group;
+}
+
+.service-table thead th {
+    background: #000000 !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 11px;
+    padding: 4px 6px;
+    border: 1px solid #cbd5e1;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.service-table thead th:nth-child(1),
+.service-table thead th:nth-child(2) {
+    text-align: left;
+    padding-left: 10px;
+}
+
+.service-table thead th:nth-child(4),
+.service-table thead th:nth-child(5) {
+    text-align: right;
+    padding-right: 10px;
+}
+
+.service-table tbody td {
+    padding: 4px 6px;
+    font-size: 11px;
+    line-height: 1.3;
+    border: 1px solid #cbd5e1;
+    vertical-align: top;
+    color: #000000;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    background: #ffffff !important;
+}
+
+.service-table tbody td:nth-child(1) {
+    width: 18%;
+    font-weight: bold;
+    color: #0f172a;
+    text-align: left;
+    padding-left: 10px;
+}
+
+.service-table tbody td:nth-child(2) {
+    width: 42%;
+    text-align: left;
+    padding-left: 10px;
+}
+
+.service-table tbody td:nth-child(3) {
+    width: 10%;
+    text-align: center;
+}
+
+.service-table tbody td:nth-child(4) {
+    width: 15%;
+    text-align: right;
+    padding-right: 10px;
+}
+
+.service-table tbody td:nth-child(5) {
+    width: 15%;
+    text-align: right;
+    padding-right: 10px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.service-table tfoot td {
+    border: 1px solid #cbd5e1;
+    padding: 4px 8px;
+    font-size: 11px;
+    background: #ffffff !important;
+}
+
+.total-title {
+    text-align: right;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.total-value {
+    text-align: right;
+    font-weight: 700;
+    color: #000000 !important;
+}
+
+/* TERMS & CONDITIONS */
+.terms-section {
+    margin-top: 0;
+    margin-bottom: 6px;
+    width: 100%;
+    background: #ffffff !important;
+}
+
+.terms-section h4,
+.terms-section .section-title,
+.bank-box h5.section-title,
+.bank-box h4 {
+    background: none !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 4px !important;
+    border-bottom: none !important;
+    
+}
+
+.terms-list {
+    padding-left: 14px;
+    margin: 0;
+}
+
+.terms-list li {
+    font-size: 12px;
+    color: #000000;
+    line-height: 1.35;
+    margin-bottom: 2px;
+}
+
+/* BANK DETAILS & SIGNATURE */
+.bank-signature {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    gap: 20px !important;
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+    width: 100% !important;
+    background: #ffffff !important;
+}
+
+.bank-box {
+    width: 55% !important;
+}
+
+.bank-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff !important;
+}
+
+.bank-table td {
+    padding: 2px 0;
+    font-size: 11px;
+    line-height: 1.3;
+    border: none !important;
+    color: #000000;
+    vertical-align: top;
+    background: #ffffff !important;
+}
+
+.bank-table td:first-child {
+    width: 110px;
+    font-weight: bold;
+    color: #000000;
+}
+
+.bank-table td:last-child {
+    color: #0f172a;
+}
+
+.signature-box {
+    width: 35%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    background: #ffffff !important;
+}
+
+.signature-space {
+    height: 50px !important;
+    min-height: 50px !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-bottom: 30px !important;
+}
+
+.signature-space img,
+.signature-img {
+    max-height: 120px !important;
+    height: auto !important;
+    width: auto !important;
+    display: block !important;
+    margin: 0 auto !important;
+    object-fit: contain !important;
+}
+
+.signature-box hr {
+    width: 100% !important;
+    border: none !important;
+    border-top: 1.5px solid #000000 !important;
+    margin: 2px 0 3px 0 !important;
+    opacity: 1 !important;
+    clear: both !important;
+}
+
+.signature-box p {
+    margin: 0 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #000000 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    text-align: center !important;
+}

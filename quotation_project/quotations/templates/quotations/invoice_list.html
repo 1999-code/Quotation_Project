@@ -1,0 +1,127 @@
+{% extends 'quotations/base.html' %}
+
+{% block title %}Invoice List - KenStack{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Invoice List</h2>
+            <p class="text-muted mb-0">View and manage all generated invoices saved in database
+                {% if category_filter %}
+                <span class="badge bg-primary ms-2">Category: {{ category_filter }}</span>
+                {% endif %}
+                {% if search_query %}
+                <span class="badge bg-info text-dark ms-1">Search: {{ search_query }}</span>
+                {% endif %}
+                {% if from_date or to_date %}
+                <span class="badge bg-secondary ms-1">Date: {{ from_date|default:"Start" }} to {{ to_date|default:"End" }}</span>
+                {% endif %}
+                {% if category_filter or search_query or from_date or to_date %}
+                <a href="{% url 'invoice_list' %}" class="btn btn-sm btn-link text-decoration-none p-0 ms-1">Clear Filters</a>
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'quotation_list' %}" class="btn btn-outline-primary">
+            <i class="bi bi-file-earmark-text"></i> View Quotations
+        </a>
+    </div>
+
+    <!-- Invoices Table Card -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            {% if invoices %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center py-3">Invoice No</th>
+                            <th class="text-center py-3">Quotation No</th>
+                            <th class="text-center py-3">Category / Project Type</th>
+                            <th class="text-center py-3">Customer</th>
+                            <th class="text-center py-3">Date</th>
+                            <th class="text-center py-3">Total Amount</th>
+                            <th class="text-center py-3">Status (Click to Toggle)</th>
+                            <th class="text-center py-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inv in invoices %}
+                        <tr>
+                            <td class="text-center align-middle fw-bold">
+                                <a href="{% url 'invoice_detail' inv.pk %}" class="text-decoration-none text-primary">
+                                    {{ inv.invoice_number }}
+                                </a>
+                            </td>
+                            <td class="text-center align-middle">
+                                <a href="{% url 'quotation_detail' inv.quotation.pk %}" class="text-decoration-none text-secondary">
+                                    {{ inv.quotation.quotation_no }}
+                                </a>
+                            </td>
+                            <td class="text-center align-middle">
+                                <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle px-2 py-1">
+                                    {{ inv.project_type|default:inv.quotation.project_type|default:"Website" }}
+                                </span>
+                            </td>
+                            <td class="text-center align-middle fw-medium">
+                                {{ inv.customer }}
+                            </td>
+                            <td class="text-center align-middle">{{ inv.invoice_date|date:"Y-m-d"|default:"--" }}</td>
+                            <td class="text-center align-middle fw-bold text-dark">
+                                {% if inv.currency == 'USD' or inv.quotation.currency == 'USD' %}${% elif inv.currency == 'AED' or inv.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ inv.total_amount|floatformat:2 }}
+                            </td>
+                            <td class="text-center align-middle">
+                                <!-- Interactive Status Toggle Button (Paid <-> Unpaid) -->
+                                <form method="POST" action="{% url 'invoice_toggle_status' inv.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    {% if inv.status == 'Paid' %}
+                                        <button type="submit" class="btn btn-sm btn-success px-2 py-1 shadow-sm border-0" title="Click to mark as Unpaid">
+                                            <i class="bi bi-check-circle-fill me-1"></i> PAID
+                                        </button>
+                                    {% elif inv.status == 'Partially Paid' or inv.status == 'Partial' %}
+                                        <button type="submit" class="btn btn-sm btn-warning text-dark px-2 py-1 shadow-sm border-0" title="Click to mark as Paid">
+                                            <i class="bi bi-clock-history me-1"></i> PARTIALLY PAID
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-sm btn-danger px-2 py-1 shadow-sm border-0" title="Click to mark as Paid">
+                                            <i class="bi bi-x-circle-fill me-1"></i> UNPAID
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                            <td class="text-center align-middle">
+                                <div class="d-flex justify-content-center align-items-center gap-1">
+                                    <a href="{% url 'invoice_detail' inv.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                    <a href="{% url 'invoice_detail' inv.pk %}?print=1" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-printer"></i> PDF
+                                    </a>
+                                    <form method="POST" action="{% url 'invoice_delete' inv.pk %}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete invoice {{ inv.invoice_number }}? This will remove it permanently from database.');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-receipt text-muted display-4"></i>
+                <h5 class="mt-3 text-secondary">No Invoices Found</h5>
+                <p class="text-muted">{% if category_filter %}No invoices found for category '{{ category_filter }}'.{% else %}No invoices generated yet. Open a quotation to generate its invoice.{% endif %}</p>
+                <a href="{% url 'quotation_list' %}" class="btn btn-primary mt-2">
+                    <i class="bi bi-file-earmark-text"></i> Go to Quotation List
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

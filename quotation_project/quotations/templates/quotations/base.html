@@ -1,0 +1,236 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Quotation Management - KenStack{% endblock %}</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'quotations/css/style.css' %}?v=1.5">
+    <link rel="stylesheet" href="{% static 'quotations/css/print.css' %}?v=1.5">
+    <style>
+           .company-logo-login {
+            max-height: 40px;
+            width: auto;
+        
+        
+        }
+    </style>
+</head>
+<body class="bg-light p-0">
+
+    <div class="app-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar no-print d-flex flex-column">
+            <div class="sidebar-header">
+                <div class="d-flex align-items-center gap-2">
+                     <img src="{% static 'quotations/log/logo.jpg' %}" alt="Logo" class="company-logo-login">
+                    <h1 class="sidebar-title">KenStack</h1>
+                </div>
+            </div>
+
+            <div class="sidebar-section-label">QUOTATION & INVOICE</div>
+            <nav class="sidebar-nav flex-grow-1">
+                <a href="{% url 'quotation_create' %}" class="nav-link {% if request.resolver_match.url_name == 'quotation_create' %}active{% endif %}">
+                    <i class="bi bi-plus-square"></i>
+                    <span>Create Quotation</span>
+                </a>
+                <a href="{% url 'quotation_list' %}" class="nav-link d-flex justify-content-between align-items-center {% if request.resolver_match.url_name == 'quotation_list' or request.resolver_match.url_name == 'quotation_detail' %}active{% endif %}">
+                    <div>
+                        <i class="bi bi-file-earmark-text"></i>
+                        <span>Quotation List</span>
+                    </div>
+                    <span class="badge bg-primary rounded-pill px-2 py-1" title="Total Quotations">{{ total_q_count|default:0 }}</span>
+                </a>
+                <a href="{% url 'invoice_list' %}" class="nav-link d-flex justify-content-between align-items-center {% if request.resolver_match.url_name == 'invoice_list' or request.resolver_match.url_name == 'invoice_detail' %}active{% endif %}">
+                    <div>
+                        <i class="bi bi-receipt"></i>
+                        <span>Invoice List</span>
+                    </div>
+                    <span class="badge bg-success rounded-pill px-2 py-1" title="Total Invoices">{{ total_i_count|default:0 }}</span>
+                </a>
+
+
+
+                <!-- Dedicated Counts Row below Search Bar -->
+                <div class="px-2 mb-3">
+                    <label class="form-label text-muted small fw-bold mb-1 px-1" style="font-size: 11px; letter-spacing: 0.5px;">ACTIVE COUNTS</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary px-3 py-2 flex-grow-1 text-center" title="Quotation Count">Quotation: {{ active_q_count|default:0 }}</span>
+                        <span class="badge bg-success px-3 py-2 flex-grow-1 text-center" title="Invoice Count">Invoice: {{ active_i_count|default:0 }}</span>
+                    </div>
+                </div>
+
+                <!-- Category Filter Dropdown & Dynamic Add Category Field -->
+                <div class="px-2 my-3">
+                    <label class="form-label text-muted small fw-bold mb-1 px-1" style="font-size: 11px; letter-spacing: 0.5px;">PROJECT CATEGORY</label>
+                    <div class="mb-2">
+                        <select class="form-select form-select-sm bg-dark text-white border-secondary" id="sidebarCategoryFilter" onchange="filterByCategory(this.value)">
+                            <option value="" {% if not selected_category %}selected{% endif %}>All Categories ({{ total_count|default:0 }})</option>
+                            {% for cat in categories_list %}
+                            <option value="{{ cat.name }}" {% if selected_category|lower == cat.name|lower %}selected{% endif %}>{{ cat.name }} ({{ cat.count }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Add New Category Input & Button -->
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="newCategoryInput" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Add category...">
+                        <button type="button" class="btn btn-sm btn-primary" onclick="addNewCategory()"><i class="bi bi-plus-lg"></i> Add</button>
+                    </div>
+                </div>
+
+                <a href="{% url 'logout' %}" class="nav-link text-danger mt-2">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+
+            <!-- Sidebar User Profile Footer -->
+            <div class="sidebar-footer p-3 border-top border-secondary mt-auto">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-person-circle fs-4 text-light"></i>
+                    <div>
+                        <div class="fw-bold text-white small">{{ request.user.username|default:"Kenstack" }}</div>
+                        <div class="text-muted" style="font-size: 10px;">Logged in</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-wrapper">
+            <!-- Top Navbar with Search & Date Filter -->
+            <header class="top-navbar no-print bg-white border-bottom px-4 py-2 d-flex flex-wrap align-items-center justify-content-between gap-3 sticky-top shadow-sm">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-file-earmark-text-fill text-primary fs-5"></i>
+                    <span class="fw-bold text-dark fs-6">
+                        {% if request.resolver_match.url_name == 'invoice_list' or request.resolver_match.url_name == 'invoice_detail' %}
+                            Invoice Management
+                        {% elif request.resolver_match.url_name == 'quotation_create' %}
+                            Create Quotation
+                        {% else %}
+                            Quotation Management
+                        {% endif %}
+                    </span>
+                </div>
+
+                <!-- Search & Date Filter Form in Top Navbar -->
+                <form method="GET" action="{% if request.resolver_match.url_name == 'invoice_list' or request.resolver_match.url_name == 'invoice_detail' %}{% url 'invoice_list' %}{% else %}{% url 'quotation_list' %}{% endif %}" id="navbarSearchForm" class="d-flex flex-wrap align-items-center gap-2 mb-0">
+                    {% if selected_category %}
+                    <input type="hidden" name="category" value="{{ selected_category }}">
+                    {% endif %}
+                    <div class="input-group input-group-sm" style="width: 220px;">
+                        <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control form-control-sm border-start-0 ps-0 bg-light" placeholder="Search Last 4 digit" value="{{ search_query|default:'' }}">
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <input type="date" name="from_date" class="form-control form-control-sm bg-light" title="From Date" placeholder="MM/DD/YYYY" value="{{ from_date|default:'' }}" style="width: 130px;">
+                        <span class="text-muted small">to</span>
+                        <input type="date" name="to_date" class="form-control form-control-sm bg-light" title="To Date" placeholder="MM/DD/YYYY" value="{{ to_date|default:'' }}" style="width: 130px;">
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center gap-1">
+                        <i class="bi bi-funnel-fill"></i> Filter
+                    </button>
+                    {% if search_query or from_date or to_date %}
+                    <a href="?" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" title="Clear Filters">
+                        <i class="bi bi-x-lg"></i> Clear
+                    </a>
+                    {% endif %}
+                </form>
+            </header>
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- html2pdf.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{% static 'quotations/js/script.js' %}?v=1.6"></script>
+
+    <!-- Dynamic Category Filter & Custom Add Category Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            loadCustomCategories();
+        });
+
+        function loadCustomCategories() {
+            const customCats = JSON.parse(localStorage.getItem("customCategories") || "[]");
+            const select = document.getElementById("sidebarCategoryFilter");
+            const projectTypeSelects = document.querySelectorAll("#projectTypeSelect");
+            const selectedCat = "{{ selected_category|escapejs }}";
+            
+            customCats.forEach(cat => {
+                if (select && !Array.from(select.options).some(opt => opt.value === cat)) {
+                    const opt = document.createElement("option");
+                    opt.value = cat;
+                    opt.textContent = cat;
+                    select.appendChild(opt);
+                }
+                projectTypeSelects.forEach(ptSelect => {
+                    if (!Array.from(ptSelect.options).some(opt => opt.value === cat)) {
+                        const opt = document.createElement("option");
+                        opt.value = cat;
+                        opt.textContent = cat;
+                        ptSelect.appendChild(opt);
+                    }
+                });
+            });
+
+            if (select && selectedCat) {
+                select.value = selectedCat;
+            }
+        }
+
+        function addNewCategory() {
+            const input = document.getElementById("newCategoryInput");
+            if (!input) return;
+            const val = input.value.trim();
+            if (!val) return;
+
+            let customCats = JSON.parse(localStorage.getItem("customCategories") || "[]");
+            if (!customCats.includes(val)) {
+                customCats.push(val);
+                localStorage.setItem("customCategories", JSON.stringify(customCats));
+            }
+            input.value = "";
+            loadCustomCategories();
+            alert("New category '" + val + "' added to dropdown!");
+        }
+
+        function filterByCategory(val) {
+            const currentUrl = new URL(window.location.href);
+            if (val) {
+                currentUrl.searchParams.set('category', val);
+            } else {
+                currentUrl.searchParams.delete('category');
+            }
+            window.location.href = currentUrl.toString();
+        }
+    </script>
+
+    <!-- Prevent Back-Button Cache Restores after Logout -->
+    <script>
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted || (window.performance && window.performance.navigation && window.performance.navigation.type === 2)) {
+                window.location.reload();
+            }
+        });
+    </script>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,102 @@
+{% extends 'quotations/base.html' %}
+
+{% block title %}Quotation List - KenStack{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Quotation List</h2>
+            <p class="text-muted mb-0">View and manage all quotations saved in database
+                {% if category_filter %}
+                <span class="badge bg-primary ms-2">Category: {{ category_filter }}</span>
+                {% endif %}
+                {% if search_query %}
+                <span class="badge bg-info text-dark ms-1">Search: {{ search_query }}</span>
+                {% endif %}
+                {% if from_date or to_date %}
+                <span class="badge bg-secondary ms-1">Date: {{ from_date|default:"Start" }} to {{ to_date|default:"End" }}</span>
+                {% endif %}
+                {% if category_filter or search_query or from_date or to_date %}
+                <a href="{% url 'quotation_list' %}" class="btn btn-sm btn-link text-decoration-none p-0 ms-1">Clear Filters</a>
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'quotation_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create Quotation
+        </a>
+    </div>
+
+    <!-- Quotations Table Card -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            {% if quotations %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center py-3">Quotation No</th>
+                            <th class="text-center py-3">Category / Project Type</th>
+                            <th class="text-center py-3">Client Name</th>
+                            <th class="text-center py-3">Project Name</th>
+                            <th class="text-center py-3">Issue Date</th>
+                            <th class="text-center py-3">Valid Until</th>
+                            <th class="text-center py-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for q in quotations %}
+                        <tr>
+                            <td class="text-center align-middle fw-bold">
+                                <a href="{% url 'quotation_detail' q.pk %}" class="text-decoration-none text-primary">
+                                    {{ q.quotation_no }}
+                                </a>
+                            </td>
+                            <td class="text-center align-middle">
+                                <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle px-2 py-1">
+                                    {{ q.project_type|default:"Website" }}
+                                </span>
+                            </td>
+                            <td class="text-center align-middle fw-medium">{{ q.client_name }}</td>
+                            <td class="text-center align-middle">{{ q.project_name|default:"--" }}</td>
+                            <td class="text-center align-middle">{{ q.issued_date|date:"Y-m-d"|default:"--" }}</td>
+                            <td class="text-center align-middle">{{ q.valid_until|date:"Y-m-d"|default:"--" }}</td>
+                            <td class="text-center align-middle">
+                                <div class="d-flex justify-content-center align-items-center gap-1">
+                                    <a href="{% url 'quotation_detail' q.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                    <a href="{% url 'quotation_detail' q.pk %}?print=1" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-printer"></i> PDF
+                                    </a>
+                                    <a href="{% url 'quotation_edit' q.pk %}" class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                    <form method="POST" action="{% url 'quotation_delete' q.pk %}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete quotation {{ q.quotation_no }}? This will remove it permanently from database.');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-folder-x text-muted display-4"></i>
+                <h5 class="mt-3 text-secondary">No Quotations Found</h5>
+                <p class="text-muted">{% if category_filter %}No quotations found for category '{{ category_filter }}'.{% else %}Create your first quotation to see it listed here.{% endif %}</p>
+                <a href="{% url 'quotation_create' %}" class="btn btn-primary mt-2">
+                    <i class="bi bi-plus-circle"></i> Create Quotation
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

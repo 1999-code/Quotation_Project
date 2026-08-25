@@ -1,0 +1,516 @@
+{% extends 'quotations/base.html' %}
+{% load static %}
+
+{% block title %}Create Quotation - KenStack{% endblock %}
+
+{% block content %}
+<div id="formSection">
+    <form method="POST" action="{% url 'quotation_create' %}">
+        {% csrf_token %}
+
+        <div class="container-fluid py-4 no-print">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <h2 class="mb-0">Quotation</h2>
+                    <div class="btn-group">
+                        <a href="{% url 'quotation_create' %}" class="btn btn-primary">
+                            Quotation
+                        </a>
+                        <a href="{% url 'invoice_list' %}" class="btn btn-outline-primary">
+                            Invoice
+                        </a>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success no-print">
+                        <i class="bi bi-floppy"></i> Save Quotation
+                    </button>
+                    <button type="button" class="btn btn-primary no-print" id="downloadPdf">
+                        <i class="bi bi-arrow-bar-down"></i> Download PDF
+                    </button>
+                    <a href="{% url 'quotation_list' %}" class="btn btn-outline-secondary no-print">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div id="quotationContent" class="container-fluid">
+            <h1 class="d-flex justify-content-center fw-bold my-4 heading">KenStack Project Quotation</h1>
+            
+            <div class="row">
+                <div class="col-lg-12">
+
+                    <!-- Quotation Details Card -->
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-body">
+                            <h5 class="mb-4">Quotation Details</h5>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Document type</label>
+                                    <select id="documentType" name="document_type" class="form-select">
+                                        <option value="Software" selected>Software</option>
+                                        <option value="Digital Marketing">Digital Marketing</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Quotation Number</label>
+                                    <input type="text" class="form-control" id="quotationNo" name="quotation_no" list="previousQuotationNumbers" placeholder="KS/QUT/2026-27/0000" autocomplete="off">
+                                    <datalist id="previousQuotationNumbers">
+                                        {% for q_no in previous_quotation_nos %}
+                                        <option value="{{ q_no }}">
+                                        {% endfor %}
+                                    </datalist>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Issue Date</label>
+                                    <input type="date" id="issueDate" name="issued_date" class="form-control">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Valid Until</label>
+                                    <input type="date" id="validUntil" name="valid_until" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Bill To and Location</label>
+                                    <input type="text" id="projectLocation" name="project_location" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Currency</label>
+                                    <select id="currency" name="currency" class="form-select">
+                                        <option value="INR" selected>INR</option>
+                                        <option value="AED">AED</option>
+                                        <option value="USD">USD</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Project Type / Category</label>
+                                    <select id="projectTypeSelect" name="project_type" class="form-select">
+                                        <option value="Website" selected>Website</option>
+                                        <option value="Website with Admin Panel">Website with Admin Panel</option>
+                                        <option value="CRM">CRM</option>
+                                        <option value="Office Automation">Office Automation</option>
+                                        <option value="Billing System">Billing System</option>
+                                        <option value="AI Software">AI Software</option>
+                                        <option value="E-commerce">E-commerce</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-1">
+                        <!-- Business Details -->
+                        <div class="col-lg-6">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body mb-5">
+                                    <h5 class="mb-5">Business Details</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Business Name</label>
+                                        <input type="text" class="form-control" value="KENSTACK TECHNOLOGIES PRIVATE LIMITED" id="businessName" name="business_name">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" class="form-control" value="skalaitry@kenstacktechnologies.com" id="businessEmail" name="business_email">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Phone</label>
+                                            <input type="text" class="form-control" value="+91 824 867 9779" id="businessPhone" name="business_phone">
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">GST Number</label>
+                                        <input type="text" id="businessGST" name="business_gst" value="33AAMCK6128J1ZB" class="form-control">
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">Website</label>
+                                        <input type="text" id="businessWebsite" name="business_website" value="kenstacktechnologies.com" class="form-control">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Address</label>
+                                        <textarea rows="5" id="businessAddress" name="business_address" class="form-control">2/3, Samadh School Street, Kaja Nagar, Edamalaipatti Pudur, Tiruchirappalli (Trichy), Tamil Nadu, 620023</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Client Details -->
+                        <div class="col-lg-6">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body">
+                                    <h5 class="mb-3">Client Details</h5>
+                                    <div class="mb-3">
+                                        <label class="form-label">Client Name</label>
+                                        <input type="text" id="clientName" name="client_name" class="form-control" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Project Name</label>
+                                        <input type="text" id="projectName" name="project_name" class="form-control">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Company Name</label>
+                                        <input type="text" id="companyName" name="company_name" class="form-control">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" id="clientEmail" name="client_email" class="form-control">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Phone</label>
+                                            <input type="text" id="clientPhone" name="client_phone" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">GST Number <span style="color: #2563eb;">( optional )</span></label>
+                                        <input type="text" id="clientGST" name="client_gst" class="form-control">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Address</label>
+                                        <textarea rows="5" id="clientAddress" name="client_address" class="form-control"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Line Items Table -->
+                    <div class="card shadow-sm border-0 mb-2 mt-4">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle text-center" id="itemTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th width="18%">Service</th>
+                                            <th width="32%">Description</th>
+                                            <th width="10%">Qty</th>
+                                            <th width="15%">Rate</th>
+                                            <th width="15%">Amount</th>
+                                            <th width="10%">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                         <tr>
+                                            <td>
+                                                <input type="text" class="form-control service" name="service" placeholder="Service">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control description" name="description" placeholder="Description">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control qty text-center" name="qty" value="1">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control rate text-end" name="rate" value="0">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control amount text-end" name="amount" value="0.00" readonly>
+                                            </td>
+                                            <td class="no-print">
+                                                <button type="button" class="btn btn-danger btn-sm deleteRow no-print">
+                                                    <i class="bi bi-trash3-fill"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-light">
+                                            <td colspan="3" class="text-start align-middle">
+                                                <div class="d-flex align-items-center gap-2 no-print">
+                                                    <button type="button" class="btn btn-success btn-sm no-print" id="addRow">
+                                                        <i class="bi bi-plus-circle"></i> Add Service
+                                                    </button>
+                                                    <button type="button" class="btn btn-primary btn-sm no-print" id="addMessageBtn">
+                                                        <i class="bi bi-chat-left-text"></i> Add Message
+                                                    </button>
+                                                    <div class="form-check form-switch no-print d-flex align-items-center gap-2 mb-0 ms-2" title="Toggle GST (18%) ON/OFF">
+                                                        <input class="form-check-input" type="checkbox" id="gstToggle" name="enable_gst" value="1" checked style="cursor: pointer; width: 2.2em; height: 1.2em;">
+                                                        <label class="form-check-label fw-bold text-dark mb-0 small" for="gstToggle" style="cursor: pointer;">GST (18%)</label>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-end fw-bold align-middle">
+                                                Subtotal
+                                            </td>
+                                            <td>
+                                                <input type="text" id="subtotalAmount" class="form-control text-end fw-bold" value="0.00" readonly>
+                                            </td>
+                                            <td class="no-print"></td>
+                                        </tr>
+                                        <tr class="table-light" id="cgstRow">
+                                            <td colspan="4" class="text-end fw-bold">
+                                                CGST (9%)
+                                            </td>
+                                            <td>
+                                                <input type="text" id="cgstAmount" class="form-control text-end fw-bold" value="0.00" readonly>
+                                            </td>
+                                            <td class="no-print"></td>
+                                        </tr>
+                                        <tr class="table-light" id="sgstRow">
+                                            <td colspan="4" class="text-end fw-bold">
+                                                SGST (9%)
+                                            </td>
+                                            <td>
+                                                <input type="text" id="sgstAmount" class="form-control text-end fw-bold" value="0.00" readonly>
+                                            </td>
+                                            <td class="no-print"></td>
+                                        </tr>
+                                        <tr class="table-light">
+                                            <td colspan="4" class="text-end fw-bold">
+                                                Grand Total
+                                            </td>
+                                            <td>
+                                                <input type="text" id="grandTotalAmount" class="form-control text-end fw-bold" value="0.00" readonly>
+                                            </td>
+                                            <td class="no-print"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <div id="messageContainer" class="mt-3 no-print" style="display: none;">
+                                <div class="card border p-3 bg-light">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label fw-bold mb-0">Additional Message / Note</label>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" id="removeMessageBtn">
+                                            <i class="bi bi-trash"></i> Remove
+                                        </button>
+                                    </div>
+                                    <textarea class="form-control" id="customMessageInput" name="custom_message" rows="2" placeholder="Enter message to display on quotation..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms & Conditions Card -->
+                    <div class="card shadow-sm border-0 mb-3 mt-4">
+                        <div class="card-body">
+                            <h6 class="mb-1">Terms & Conditions</h6>
+                            <textarea class="form-control" id="terms" name="terms" rows="6" placeholder="Enter quotation terms and conditions...">50% advance required to start the project.
+Remaining payment before final delivery.
+Additional features will be charged separately.</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Bank Details Card -->
+                    <div class="card shadow-sm border-0 mb-2 mt-4">
+                        <div class="card-body">
+                            <h5 class="mb-4">Bank Details</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Bank Name</label>
+                                    <input type="text" id="bankName" name="bank_name" value="Karur Vysya Bank" class="form-control" placeholder="Enter Bank Name">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Account Holder</label>
+                                    <input type="text" id="accountHolder" name="account_holder" value="KENSTACK TECHNOLOGIES PRIVATE LIMITED" class="form-control" placeholder="Enter Account Holder">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Account Number</label>
+                                    <input type="text" id="accountNumber" name="account_number" value="1602010000000351" class="form-control" placeholder="Enter Account Number">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">IFSC Code</label>
+                                    <input type="text" id="ifsc" name="ifsc" value="KVBL0001602" class="form-control" placeholder="Enter IFSC Code">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Branch</label>
+                                    <input type="text" id="branch" name="branch" value="Trichy Gundur Branch" class="form-control" placeholder="Enter Branch">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- PDF Print Template -->
+<div id="createQuotationPrintTemplate">
+    <div class="pdf-container">
+        <!-- HEADER -->
+        <div class="pdf-header">
+            <div class="left-header">
+                <div>
+                    <h4 class="fw-bold">KENSTACK TECHNOLOGIES PRIVATE LIMITED</h4>
+                    <p>2/3, Samadh School Street, Kaja Nagar, Edamalaipatti Pudur, Tiruchirappalli (Trichy),<br>Tamil Nadu, 620023</p>
+                    <p>+91 824 867 9779 | skalaitry@kenstacktechnologies.com</p>
+                    <p class="fw-bold text-dark mb-0">GST No : 33AAMCK6128J1ZB</p>
+                </div>
+            </div>
+            <div class="right-header">
+                <img src="{% static 'quotations/log/logo.jpg' %}" class="company-logo">
+                <h4 id="pdfDocumentType">SOFTWARE QUOTATION</h4>
+            </div>
+        </div>
+
+        <!-- BILL TO -->
+        <div class="bill-section">
+            <div>
+                <h4>Bill To</h4>
+                <h4 id="pdfProjectName"></h4>
+                <p id="pdfLocation"></p>
+            </div>
+            <div class="quote-details">
+                <p><b>Quote No :</b> <span id="pdfQuoteNo"></span></p>
+                <p><b>Quote Date :</b> <span id="pdfQuoteDate"></span></p>
+                <p><b>Valid Date :</b> <span id="pdfValidUntil"></span></p>
+            </div>
+        </div>
+
+        <!-- DETAILS -->
+        <div class="details-section">
+            <div class="details-box">
+                <h4 class="section-title">Business Details</h4>
+                <table>
+                    <tr>
+                        <td>Business Name</td>
+                        <td id="pdfBusinessName"></td>
+                    </tr>
+                    <tr>
+                        <td>Email</td>
+                        <td id="pdfBusinessEmail"></td>
+                    </tr>
+                    <tr>
+                        <td>Phone</td>
+                        <td id="pdfBusinessPhone"></td>
+                    </tr>
+                    <tr>
+                        <td>GST Number</td>
+                        <td id="pdfBusinessGST">33AAMCK6128J1ZB</td>
+                    </tr>
+                    <tr>
+                        <td>Website</td>
+                        <td id="pdfBusinessWebsite"></td>
+                    </tr>
+                    <tr>
+                        <td>Address</td>
+                        <td id="pdfBusinessAddress"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="details-box">
+                <h4 class="section-title">Client Details</h4>
+                <table>
+                    <tr>
+                        <td>Client Name</td>
+                        <td id="pdfClientName"></td>
+                    </tr>
+                    <tr>
+                        <td>Company</td>
+                        <td id="pdfCompanyName"></td>
+                    </tr>
+                    <tr>
+                        <td>Email</td>
+                        <td id="pdfClientEmail"></td>
+                    </tr>
+                    <tr>
+                        <td>Phone</td>
+                        <td id="pdfClientPhone"></td>
+                    </tr>
+                    <tr>
+                        <td>GST Number</td>
+                        <td id="pdfClientGST"></td>
+                    </tr>
+                    <tr>
+                        <td>Address</td>
+                        <td id="pdfClientAddress"></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- SERVICE TABLE -->
+        <div class="service-section">
+            <table class="service-table">
+                <thead>
+                    <tr>
+                        <th width="18%">Service</th>
+                        <th width="42%">Description</th>
+                        <th width="10%">Qty</th>
+                        <th width="15%">Rate</th>
+                        <th width="15%">Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="pdfServiceBody">
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" class="total-title">Subtotal</td>
+                        <td class="total-value" style="color: #0f172a !important;"><span id="pdfSubtotal">₹0.00</span></td>
+                    </tr>
+                    <tr id="pdfCgstRow">
+                        <td colspan="4" class="total-title">CGST (9%)</td>
+                        <td class="total-value" style="color: #0f172a !important;"><span id="pdfCgst">₹0.00</span></td>
+                    </tr>
+                    <tr id="pdfSgstRow">
+                        <td colspan="4" class="total-title">SGST (9%)</td>
+                        <td class="total-value" style="color: #0f172a !important;"><span id="pdfSgst">₹0.00</span></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="total-title">Grand Total</td>
+                        <td class="total-value"><span id="pdfGrandTotal">₹0.00</span></td>
+                    </tr>
+                    <tr id="pdfMessageRow" style="display: none;">
+                        <td colspan="5" style="padding: 8px 10px; background-color: #ffffff; font-style: italic; color: #334155; font-size: 11px;">
+                            <strong>Note / Message:</strong> <span id="pdfMessageText"></span>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- BOTTOM WRAPPER FOR TERMS, BANK & SIGNATURE -->
+        <div class="pdf-bottom-wrapper">
+            <!-- TERMS & CONDITIONS -->
+            <div class="terms-section">
+                <h4 class="section-title">Terms & Conditions</h4>
+                <ol class="terms-list" id="pdfTerms">
+                </ol>
+            </div>
+
+            <!-- BANK & SIGNATURE -->
+            <div class="bank-signature">
+                <div class="bank-box">
+                    <h4 class="section-title">Bank Details</h4>
+                    <table class="bank-table">
+                        <tr>
+                            <td>Bank Name</td>
+                            <td id="pdfBankName">Karur Vysya Bank</td>
+                        </tr>
+                        <tr>
+                            <td>Account Holder</td>
+                            <td id="pdfAccountHolder"></td>
+                        </tr>
+                        <tr>
+                            <td>Account Number</td>
+                            <td id="pdfAccountNumber"></td>
+                        </tr>
+                        <tr>
+                            <td>IFSC Code</td>
+                            <td id="pdfIFSC"></td>
+                        </tr>
+                        <tr>
+                            <td>Branch</td>
+                            <td id="pdfBranch"></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="signature-box text-center">
+                    <div class="signature-space text-center">
+                        <img src="{% static 'quotations/log/signature.png' %}" class="signature-img" alt="Authorized Stamp & Signature">
+                    </div>
+                    <hr class="my-1 border-dark opacity-100">
+                    <p class="fw-bold mb-0 small text-uppercase">Authorized Signature</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

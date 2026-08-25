@@ -1,0 +1,516 @@
+{% extends 'quotations/base.html' %}
+{% load static %}
+
+{% block title %}Invoice: {{ invoice.invoice_number }} - KenStack{% endblock %}
+
+{% block content %}
+<div id="invoicePreviewSection" class="container-fluid py-4">
+    <!-- Header / Navigation Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <a href="{% url 'invoice_list' %}" class="text-decoration-none text-muted">
+                    <i class="bi bi-arrow-left"></i> Invoice List
+                </a>
+                <span class="text-muted">/</span>
+                <span class="fw-semibold text-primary">{{ invoice.invoice_number }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <h2 class="mb-0">INVOICE PREVIEW</h2>
+                <form method="POST" action="{% url 'invoice_toggle_status' invoice.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    {% if invoice.status == 'Paid' %}
+                        <button type="submit" class="btn btn-success fs-6 px-3 py-2 border-0 shadow-sm" title="Click to toggle to Unpaid">
+                            <i class="bi bi-check-circle-fill me-1"></i> PAID
+                        </button>
+                    {% elif invoice.status == 'Partially Paid' or invoice.status == 'Partial' %}
+                        <button type="submit" class="btn btn-warning text-dark fs-6 px-3 py-2 border-0 shadow-sm" title="Click to toggle to Paid">
+                            <i class="bi bi-clock-history me-1"></i> PARTIALLY PAID
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-danger fs-6 px-3 py-2 border-0 shadow-sm" title="Click to toggle to Paid">
+                            <i class="bi bi-x-circle-fill me-1"></i> UNPAID
+                        </button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary no-print" id="printInvoiceBtn">
+                <i class="bi bi-printer"></i> Print / Download PDF
+            </button>
+            <a href="{% url 'quotation_detail' invoice.quotation.pk %}" class="btn btn-outline-primary no-print">
+                <i class="bi bi-file-earmark-text"></i> View Quotation
+            </a>
+        </div>
+    </div>
+
+    <!-- Invoice Screen Card (Identical layout to Quotation sample quo-01) -->
+    <div class="card shadow-sm border-0 no-print">
+        <div class="card-body p-4 p-md-5" style="background: #ffffff;">
+
+            <!-- Header -->
+            <div class="row align-items-start mb-4">
+                <div class="col-md-7">
+                    <h3 class="fw-bold text-dark mb-1">{{ invoice.business_name|default:invoice.quotation.business_name }}</h3>
+                    <p class="text-muted small mb-1">{{ invoice.business_address|default:invoice.quotation.business_address|default:"Tiruchirappalli, Tamil Nadu" }}</p>
+                    <p class="text-muted small mb-1">{{ invoice.business_phone|default:invoice.quotation.business_phone|default:"+91 8248679779" }} | {{ invoice.business_email|default:invoice.quotation.business_email|default:"skalaitry@kenstacktechnologies.com" }}</p>
+                    <p class="fw-bold text-dark small mb-0">GST No : {{ invoice.business_gst|default:invoice.quotation.business_gst|default:"33AAMCK6128J1ZB" }}</p>
+                </div>
+                <div class="col-md-5 text-end">
+                    <img src="{% static 'quotations/log/logo.jpg' %}" alt="Kenstack Logo" style="max-height: 55px;" class="mb-2">
+                    <h3 class="fw-bold text-primary mb-0">{{ invoice.display_title }}</h3>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Bill To & Details -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6 class="text-muted text-uppercase fw-bold small mb-2">Bill To</h6>
+                    <h5 class="fw-bold mb-1">{{ invoice.customer }}</h5>
+                    <p class="text-secondary mb-1"><strong>Project:</strong> {{ invoice.project_name|default:invoice.quotation.project_name|default:"--" }}</p>
+                    <p class="text-muted small mb-1"><strong>Location:</strong> {{ invoice.project_location|default:invoice.quotation.project_location|default:"Trichy" }}</p>
+                    <p class="text-muted small mb-0"><strong>Category:</strong> <span class="badge bg-secondary text-white px-2 py-1">{{ invoice.project_type|default:invoice.quotation.project_type|default:"Website" }}</span></p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="d-inline-block text-start">
+                        <table class="table table-borderless table-sm mb-0">
+                            <tr>
+                                <td class="fw-bold pe-3 ps-0 text-dark">Invoice No :</td>
+                                <td class="fw-bold text-dark">{{ invoice.invoice_number }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold pe-3 ps-0">Invoice Date :</td>
+                                <td>{{ invoice.invoice_date|date:"Y-m-d" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold pe-3 ps-0">Valid Date :</td>
+                                <td>{% if invoice.valid_until %}{{ invoice.valid_until|date:"Y-m-d" }}{% elif invoice.quotation.valid_until %}{{ invoice.quotation.valid_until|date:"Y-m-d" }}{% else %}--{% endif %}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business & Client Details Cards -->
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <div class="border rounded p-3 bg-light h-100">
+                        <h6 class="fw-bold text-uppercase mb-2">Business Details</h6>
+                        <table class="table table-borderless table-sm mb-0 small">
+                            <tr>
+                                <td class="text-muted ps-0" width="130">Business Name</td>
+                                <td class="fw-bold">{{ invoice.business_name|default:invoice.quotation.business_name }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-0">Email</td>
+                                <td>{{ invoice.business_email|default:invoice.quotation.business_email }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-0">Phone</td>
+                                <td>{{ invoice.business_phone|default:invoice.quotation.business_phone }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-0">GST Number</td>
+                                <td>{% if invoice.business_gst and invoice.business_gst != '---' %}{{ invoice.business_gst }}{% elif invoice.quotation.business_gst and invoice.quotation.business_gst != '---' %}{{ invoice.quotation.business_gst }}{% else %}33AAMCK6128J1ZB{% endif %}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="border rounded p-3 bg-light h-100">
+                        <h6 class="fw-bold text-uppercase mb-2">Client Details</h6>
+                        <table class="table table-borderless table-sm mb-0 small">
+                            <tr>
+                                <td class="text-muted ps-0" width="130">Client Name</td>
+                                <td class="fw-bold">{{ invoice.customer }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-0">Company</td>
+                                <td>{{ invoice.company_name|default:invoice.quotation.company_name|default:"--" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-0">Email</td>
+                                <td>{{ invoice.client_email|default:invoice.quotation.client_email|default:"--" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted ps-0">Phone</td>
+                                <td>{{ invoice.client_phone|default:invoice.quotation.client_phone|default:"--" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Items Table -->
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered align-middle">
+                    <thead style="background-color: #2563eb; color: #ffffff;">
+                        <tr>
+                            <th style="background-color: #2563eb; color: #ffffff;" width="20%">SERVICE</th>
+                            <th style="background-color: #2563eb; color: #ffffff;" width="40%">DESCRIPTION</th>
+                            <th style="background-color: #2563eb; color: #ffffff;" width="10%" class="text-center">QTY</th>
+                            <th style="background-color: #2563eb; color: #ffffff;" width="15%" class="text-end">RATE</th>
+                            <th style="background-color: #2563eb; color: #ffffff;" width="15%" class="text-end">AMOUNT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in invoice.items.all %}
+                        <tr>
+                            <td class="fw-bold">{{ item.item_name }}</td>
+                            <td>{{ item.description|default:"--" }}</td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-end">
+                                {% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ item.unit_price|floatformat:2 }}
+                            </td>
+                            <td class="text-end fw-semibold">
+                                {% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ item.amount|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        {% for item in invoice.quotation.items.all %}
+                        <tr>
+                            <td class="fw-bold">{{ item.item_name }}</td>
+                            <td>{{ item.description|default:"--" }}</td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-end">
+                                {% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ item.unit_price|floatformat:2 }}
+                            </td>
+                            <td class="text-end fw-semibold">
+                                {% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ item.amount|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" class="text-end fw-bold">Subtotal</td>
+                            <td class="text-end fw-bold">
+                                {% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ invoice.subtotal|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% if invoice.enable_gst %}
+                        <tr>
+                            <td colspan="4" class="text-end fw-bold">CGST (9%)</td>
+                            <td class="text-end">
+                                {% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ invoice.cgst|floatformat:2 }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" class="text-end fw-bold">SGST (9%)</td>
+                            <td class="text-end">
+                                {% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ invoice.sgst|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        <tr class="table-light border-top border-dark">
+                            <td colspan="4" class="text-end fw-bold fs-5">Grand Total</td>
+                            <td class="text-end fw-bold fs-5 text-primary">
+                                {% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ invoice.total_amount|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% if invoice.note_message or invoice.quotation.note_message %}
+                        <tr>
+                            <td colspan="5" class="bg-light p-3">
+                                <strong>Note / Message:</strong> {{ invoice.note_message|default:invoice.quotation.note_message }}
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Terms & Conditions Section -->
+            <div class="mb-4">
+                <h5 class="fw-bold mb-2">Terms & Conditions</h5>
+                <ol class="small text-dark ps-3 mb-0" style="line-height: 1.5;">
+                    {% for item in invoice.terms_conditions_list %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+
+            <!-- Bank Details & Signature Section -->
+            <div class="row align-items-end">
+                <div class="col-md-7">
+                    <h6 class="fw-bold text-uppercase mb-2">Bank Details</h6>
+                    <table class="table table-borderless table-sm mb-0 small">
+                        <tr>
+                            <td class="fw-bold ps-0" width="130">Bank Name</td>
+                            <td>{{ invoice.bank_name|default:invoice.quotation.bank_name|default:"Karur Vysya Bank" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold ps-0">Account Holder</td>
+                            <td>{{ invoice.account_holder|default:invoice.quotation.account_holder|default:"KENSTACK TECHNOLOGIES PRIVATE LIMITED" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold ps-0">Account Number</td>
+                            <td>{{ invoice.account_number|default:invoice.quotation.account_number|default:"1602010000000351" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold ps-0">IFSC Code</td>
+                            <td>{{ invoice.ifsc|default:invoice.quotation.ifsc|default:"KVBL0001602" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold ps-0">Branch</td>
+                            <td>{{ invoice.branch|default:invoice.quotation.branch|default:"Trichy Gundur Branch" }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="col-md-5 text-center">
+                    <div style="height: 90px; display: flex; align-items: center; justify-content: center; margin-bottom: 5px;">
+                        <img src="{% static 'quotations/log/signature.png' %}" style="max-height: 85px; width: auto; margin: 0 auto; display: block;" alt="Authorized Stamp & Signature">
+                    </div>
+                    <hr class="my-1 border-dark opacity-100" style="border-top: 2px solid #000000 !important; margin: 4px 0 !important;">
+                    <p class="fw-bold text-uppercase small mb-0" style="white-space: nowrap;">Authorized Signature</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Pure Printable / PDF Template (Hidden on screen, shown during print) -->
+<div id="invoicePrintTemplate" style="display: none;">
+    <div class="pdf-container">
+        <!-- HEADER -->
+        <div class="pdf-header">
+            <div class="left-header">
+                <div>
+                    <h4 class="fw-bold">{{ invoice.business_name|default:invoice.quotation.business_name }}</h4>
+                    <p>{{ invoice.formatted_business_address|safe }}</p>
+                    <p>{{ invoice.business_phone|default:invoice.quotation.business_phone|default:"+91 8248679779" }} | {{ invoice.business_email|default:invoice.quotation.business_email|default:"skalaitry@kenstacktechnologies.com" }}</p>
+                    <p class="fw-bold text-dark mb-0">GST No : {{ invoice.business_gst|default:invoice.quotation.business_gst|default:"33AAMCK6128J1ZB" }}</p>
+                </div>
+            </div>
+            <div class="right-header">
+                <img src="{% static 'quotations/log/logo.jpg' %}" class="company-logo">
+                <h4 class="text-primary">{{ invoice.display_title }}</h4>
+            </div>
+        </div>
+
+        <!-- BILL TO & METADATA -->
+        <div class="bill-section">
+            <div>
+                <h4>Bill To</h4>
+                <h4 id="pdfProjectName">{{ invoice.project_name|default:invoice.quotation.project_name|default:invoice.customer }}</h4>
+                <p id="pdfLocation">{{ invoice.project_location|default:invoice.quotation.project_location|default:"Trichy" }}</p>
+            </div>
+            <div class="quote-details">
+                <p><b>Invoice No :</b> <span style="color: #000000; font-weight: bold;">{{ invoice.invoice_number }}</span></p>
+                <p><b>Invoice Date :</b> <span>{{ invoice.invoice_date|date:"Y-m-d" }}</span></p>
+                <p><b>Valid Date :</b> <span>{% if invoice.valid_until %}{{ invoice.valid_until|date:"Y-m-d" }}{% elif invoice.quotation.valid_until %}{{ invoice.quotation.valid_until|date:"Y-m-d" }}{% else %}--{% endif %}</span></p>
+            </div>
+        </div>
+
+        <!-- BUSINESS & CLIENT DETAILS BOXES -->
+        <div class="details-section">
+            <div class="details-box">
+                <h4 class="section-title">Business Details</h4>
+                <table>
+                    <tr>
+                        <td>Business Name</td>
+                        <td>{{ invoice.business_name|default:invoice.quotation.business_name }}</td>
+                    </tr>
+                    <tr>
+                        <td>Email</td>
+                        <td>{{ invoice.business_email|default:invoice.quotation.business_email }}</td>
+                    </tr>
+                    <tr>
+                        <td>Phone</td>
+                        <td>{{ invoice.business_phone|default:invoice.quotation.business_phone }}</td>
+                    </tr>
+                    <tr>
+                        <td>GST Number</td>
+                        <td>{% if invoice.business_gst and invoice.business_gst != '---' %}{{ invoice.business_gst }}{% elif invoice.quotation.business_gst and invoice.quotation.business_gst != '---' %}{{ invoice.quotation.business_gst }}{% else %}33AAMCK6128J1ZB{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td>Website</td>
+                        <td>{{ invoice.business_website|default:invoice.quotation.business_website }}</td>
+                    </tr>
+                    <tr>
+                        <td>Address</td>
+                        <td>{{ invoice.business_address|default:invoice.quotation.business_address }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="details-box">
+                <h4 class="section-title">Client Details</h4>
+                <table>
+                    <tr>
+                        <td>Client Name</td>
+                        <td>{{ invoice.customer }}</td>
+                    </tr>
+                    <tr>
+                        <td>Company</td>
+                        <td>{{ invoice.company_name|default:invoice.quotation.company_name|default:"--" }}</td>
+                    </tr>
+                    <tr>
+                        <td>Email</td>
+                        <td>{{ invoice.client_email|default:invoice.quotation.client_email|default:"--" }}</td>
+                    </tr>
+                    <tr>
+                        <td>Phone</td>
+                        <td>{{ invoice.client_phone|default:invoice.quotation.client_phone|default:"--" }}</td>
+                    </tr>
+                    <tr>
+                        <td>GST Number</td>
+                        <td>{{ invoice.client_gst|default:invoice.quotation.client_gst|default:"--" }}</td>
+                    </tr>
+                    <tr>
+                        <td>Address</td>
+                        <td>{{ invoice.client_address|default:invoice.quotation.client_address|default:"--" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- SERVICE TABLE -->
+        <div class="service-section">
+            <table class="service-table">
+                <thead>
+                    <tr>
+                        <th width="18%">Service</th>
+                        <th width="42%">Description</th>
+                        <th width="10%">Qty</th>
+                        <th width="15%">Rate</th>
+                        <th width="15%">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in invoice.items.all %}
+                    <tr>
+                        <td>{{ item.item_name }}</td>
+                        <td>{{ item.description|default:"--" }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ item.unit_price|floatformat:2 }}</td>
+                        <td>{% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ item.amount|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    {% for item in invoice.quotation.items.all %}
+                    <tr>
+                        <td>{{ item.item_name }}</td>
+                        <td>{{ item.description|default:"--" }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ item.unit_price|floatformat:2 }}</td>
+                        <td>{% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ item.amount|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" class="total-title">Subtotal</td>
+                        <td class="total-value" style="color: #0f172a !important;">{% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ invoice.subtotal|floatformat:2 }}</td>
+                    </tr>
+                    {% if invoice.enable_gst %}
+                    <tr>
+                        <td colspan="4" class="total-title">CGST (9%)</td>
+                        <td class="total-value" style="color: #0f172a !important;">{% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ invoice.cgst|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="total-title">SGST (9%)</td>
+                        <td class="total-value" style="color: #0f172a !important;">{% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ invoice.sgst|floatformat:2 }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <td colspan="4" class="total-title">Grand Total</td>
+                        <td class="total-value">{% if invoice.currency == 'USD' or invoice.quotation.currency == 'USD' %}${% elif invoice.currency == 'AED' or invoice.quotation.currency == 'AED' %}AED {% else %}₹{% endif %}{{ invoice.total_amount|floatformat:2 }}</td>
+                    </tr>
+                    {% if invoice.note_message or invoice.quotation.note_message %}
+                    <tr>
+                        <td colspan="5" style="padding: 8px 10px; background-color: #ffffff; font-style: italic; color: #334155; font-size: 11px;">
+                            <strong>Note / Message:</strong> {{ invoice.note_message|default:invoice.quotation.note_message }}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- BOTTOM WRAPPER FOR TERMS, BANK & SIGNATURE -->
+        <div class="pdf-bottom-wrapper">
+            <!-- TERMS & CONDITIONS -->
+            <div class="terms-section">
+                <h4 class="section-title">Terms & Conditions</h4>
+                <ol class="terms-list">
+                    {% for item in invoice.terms_conditions_list %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+
+            <!-- BANK & SIGNATURE -->
+            <div class="bank-signature">
+                <div class="bank-box">
+                    <h4 class="section-title">Bank Details</h4>
+                    <table class="bank-table">
+                        <tr>
+                            <td>Bank Name</td>
+                            <td>{{ invoice.bank_name|default:invoice.quotation.bank_name|default:"Karur Vysya Bank" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Account Holder</td>
+                            <td>{{ invoice.account_holder|default:invoice.quotation.account_holder|default:"KENSTACK TECHNOLOGIES PRIVATE LIMITED" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Account Number</td>
+                            <td>{{ invoice.account_number|default:invoice.quotation.account_number|default:"1602010000000351" }}</td>
+                        </tr>
+                        <tr>
+                            <td>IFSC Code</td>
+                            <td>{{ invoice.ifsc|default:invoice.quotation.ifsc|default:"KVBL0001602" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Branch</td>
+                            <td>{{ invoice.branch|default:invoice.quotation.branch|default:"Trichy Gundur Branch" }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="signature-box text-center">
+                    <div class="signature-space text-center">
+                        <img src="{% static 'quotations/log/signature.png' %}" class="signature-img" alt="Authorized Stamp & Signature">
+                    </div>
+                    <hr class="my-1 border-dark opacity-100">
+                    <p class="fw-bold mb-0 small text-uppercase">Authorized Signature</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const printBtn = document.getElementById("printInvoiceBtn");
+        const invoiceTemplate = document.getElementById("invoicePrintTemplate");
+
+        function openPrintDialog() {
+            if (!invoiceTemplate) return;
+            invoiceTemplate.style.display = "block";
+            window.print();
+            invoiceTemplate.style.display = "none";
+        }
+
+        if (printBtn) {
+            printBtn.addEventListener("click", function () {
+                openPrintDialog();
+            });
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('print') === '1' || {% if auto_download_pdf %}true{% else %}false{% endif %}) {
+            setTimeout(openPrintDialog, 300);
+        }
+    });
+</script>
+{% endblock %}
